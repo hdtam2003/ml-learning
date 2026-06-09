@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Patient Analysis Report</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/inter-ui@3.19.3/inter.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+    <style>
+        :root {
+            --primary: #2563eb;
+            --bg: #f8fafc;
+            --card: white;
+            --text: #1e293b;
+            --border: #e2e8f0;
+            --radius: 16px;
+        }
+        body { font-family: "Inter", sans-serif; background: #f1f5f9; color: var(--text); padding: 40px 20px; }
+        .container { max-width: 1000px; margin: 0 auto; background: var(--card); border-radius: var(--radius); padding: 40px; box-shadow: 0 10px 25px rgba(0,0,0,0.05); opacity: 0; transform: translateY(20px); }
+        .header { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid var(--border); padding-bottom: 20px; margin-bottom: 30px; }
+        .patient-info { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; margin-bottom: 40px; }
+        .info-card { background: #f8fafc; padding: 20px; border-radius: 12px; border: 1px solid var(--border); }
+        .info-card label { display: block; font-size: 12px; font-weight: 700; text-transform: uppercase; color: #64748b; margin-bottom: 5px; }
+        .info-card span { font-size: 20px; font-weight: 800; color: #0f172a; }
+        .chart-container { margin-top: 40px; height: 400px; position: relative; }
+        .summary { margin-top: 40px; line-height: 1.6; }
+        .badge { display: inline-block; padding: 4px 12px; border-radius: 20px; font-weight: 700; font-size: 14px; }
+        .badge-pos { background: #fef2f2; color: #991b1b; }
+        .badge-neg { background: #f0fdf4; color: #166534; }
+        .btn { display: inline-block; margin-top: 30px; padding: 12px 24px; background: var(--primary); color: white; text-decoration: none; border-radius: 10px; font-weight: 600; transition: 0.2s; }
+        .btn:hover { opacity: 0.9; transform: translateY(-2px); }
+    </style>
+</head>
+<body>
+    <div class="container" id="reportContainer">
+        <div class="header">
+            <h1>Patient Analysis Report</h1>
+            <div class="date">{{ date }}</div>
+        </div>
+
+        <div class="patient-info">
+            <div class="info-card"><label>Age</label><span>{{ patient.Age }}</span></div>
+            <div class="info-card"><label>BMI</label><span>{{ patient.BMI }}</span></div>
+            <div class="info-card"><label>MMSE</label><span>{{ patient.MMSE }}</span></div>
+            <div class="info-card"><label>ADL</label><span>{{ patient.ADL }}</span></div>
+            <div class="info-card"><label>Memory Complaints</label><span>{{ 'Yes' if patient.MemoryComplaints == '1' else 'No' }}</span></div>
+            <div class="info-card"><label>Functional Assessment</label><span>{{ patient.FunctionalAssessment }}</span></div>
+        </div>
+
+        <div class="summary">
+            <h3>Clinical Summary</h3>
+            <p>Based on the submitted metrics, the patient's MMSE score of <strong>{{ patient.MMSE }}</strong>
+               and ADL score of <strong>{{ patient.ADL }}</strong> are being compared to a population of {{ total_count }} records.</p>
+        </div>
+
+        <div class="chart-container">
+            <canvas id="compChart"></canvas>
+        </div>
+
+        <a href="/" class="btn">New Assessment</a>
+    </div>
+
+    <script>
+        gsap.to("#reportContainer", { opacity: 1, y: 0, duration: 0.8, ease: "power3.out" });
+
+        const ctx = document.getElementById('compChart').getContext('2d');
+        new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: ['MMSE', 'ADL', 'Functional Assessment', 'BMI'],
+                datasets: [{
+                    label: 'Patient Data',
+                    data: [{{ patient.MMSE }}, {{ patient.ADL }}, {{ patient.FunctionalAssessment }}, {{ patient.BMI }}],
+                    backgroundColor: 'rgba(37, 99, 235, 0.8)',
+                    borderRadius: 8
+                }, {
+                    label: 'Population Average',
+                    data: [{{ averages.MMSE }}, {{ averages.ADL }}, {{ averages.FunctionalAssessment }}, {{ averages.BMI }}],
+                    backgroundColor: 'rgba(226, 232, 240, 0.8)',
+                    borderRadius: 8
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    y: { beginAtZero: true }
+                },
+                animation: {
+                    duration: 2000,
+                    easing: 'easeOutQuart'
+                }
+            }
+        });
+    </script>
+</body>
+</html>
