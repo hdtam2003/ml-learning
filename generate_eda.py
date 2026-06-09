@@ -39,15 +39,23 @@ def generate_report():
 
     # Combine into a single HTML report with a clean layout
     with open('eda_report.html', 'w') as f:
-        f.write("<html><head><title>Alzheimer's Clinical EDA</title>")
-        f.write("<style>body{font-family:sans-serif; background:#f8fafc; padding:20px;} .chart-container{background:white; border-radius:8px; padding:20px; margin-bottom:30px; box-shadow:0 1px 3px rgba(0,0,0,0.1);}</style>")
+        f.write("<html><head>")
+        f.write("<meta charset='UTF-8'><meta name='viewport' content='width=device-width, initial-scale=1.0'>")
+        f.write("<title>Alzheimer's Clinical EDA</title>")
+        f.write("<style>")
+        f.write("body{font-family:sans-serif; background:#f8fafc; padding:20px; margin:0;}")
+        f.write(".grid{display:grid; grid-template-columns: repeat(auto-fit, minmax(400px, 1fr)); gap:20px;}")
+        f.write(".chart-container{background:white; border-radius:8px; padding:20px; box-shadow:0 1px 3px rgba(0,0,0,0.1); min-height:450px;}")
+        f.write("@media (max-width: 600px) { .grid{grid-template-columns: 1fr;} .chart-container{min-height:350px; padding:10px;} }")
+        f.write("</style>")
         f.write("</head><body>")
         f.write("<h1>Advanced Clinical Data Exploration</h1>")
+        f.write("<div class='grid'>")
 
         for i, fig in enumerate([fig1, fig2, fig3, fig4]):
             f.write(f"<div class='chart-container'>{fig.to_html(full_html=False, include_plotlyjs='cdn' if i==0 else False)}</div>")
 
-        f.write("</body></html>")
+        f.write("</div></body></html>")
 
     print("EDA Report generated: eda_report.html")
 

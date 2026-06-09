@@ -1,6 +1,8 @@
 <!DOCTYPE html>
 <html>
 <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Patient Analysis Report</title>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/inter-ui@3.19.3/inter.min.css">
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
@@ -46,19 +48,28 @@
         }
         .header { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid var(--border); padding-bottom: 20px; margin-bottom: 30px; }
         .header h1 { margin: 0; font-size: 28px; font-weight: 800; }
-        .patient-info { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; margin-bottom: 40px; }
-        .gauge-container { display: flex; justify-content: space-around; margin-bottom: 40px; gap: 20px; }
+        .patient-info { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; margin-bottom: 40px; }
+        .gauge-container { display: flex; flex-wrap: wrap; justify-content: space-around; margin-bottom: 40px; gap: 20px; }
         .gauge-card { flex: 1; background: rgba(248, 250, 252, 0.5); padding: 20px; border-radius: 12px; border: 1px solid var(--border); text-align: center; }
         .gauge-card h4 { margin: 0 0 15px; color: #64748b; font-size: 14px; text-transform: uppercase; }
         .info-card { background: rgba(248, 250, 252, 0.8); padding: 20px; border-radius: 12px; border: 1px solid var(--border); }
         .info-card label { display: block; font-size: 12px; font-weight: 700; text-transform: uppercase; color: #64748b; margin-bottom: 5px; }
         .info-card span { font-size: 20px; font-weight: 800; color: #0f172a; }
         .chart-container { margin-top: 20px; height: 350px; position: relative; }
-        .viz-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 30px; margin-top: 40px; }
+        .viz-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(350px, 1fr)); gap: 30px; margin-top: 40px; }
         .viz-card { background: rgba(248, 250, 252, 0.5); padding: 25px; border-radius: 12px; border: 1px solid var(--border); }
         .summary { margin-top: 40px; line-height: 1.6; }
         .btn { display: inline-block; margin-top: 30px; padding: 12px 24px; background: var(--primary); color: white; text-decoration: none; border-radius: 10px; font-weight: 600; transition: 0.2s; border: none; }
         .btn:hover { opacity: 0.9; transform: translateY(-2px); }
+
+        @media (max-width: 640px) {
+            body { padding: 10px; }
+            .container { padding: 20px; border-radius: 0; }
+            .header h1 { font-size: 20px; }
+            .patient-info { grid-template-columns: 1fr 1fr; }
+            .viz-grid { grid-template-columns: 1fr; }
+            .gauge-card { width: 100%; min-width: 100%; }
+        }
     </style>
 </head>
 <body>
