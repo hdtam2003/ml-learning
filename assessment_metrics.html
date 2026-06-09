@@ -9,7 +9,7 @@
       --primary: #2563eb;
       --primary-dark: #1d4ed8;
       --bg: #f8fafc;
-      --card: #ffffff;
+      --card: rgba(255, 255, 255, 0.94);
       --text: #1e293b;
       --text-light: #64748b;
       --border: #e2e8f0;
@@ -26,35 +26,47 @@
       --info-text: #1e40af;
 
       --radius: 12px;
-
-      /* Form specific */
-      --form-bg: #f0ebf8;
-      --form-accent: #673ab7;
-      --form-accent-hover: #5e35b1;
     }
 
     * { box-sizing: border-box; }
 
     body {
       font-family: -apple-system, BlinkMacSystemFont, "Inter", "Segoe UI", Roboto, sans-serif;
-      background-color: var(--bg);
+      background-color: #cbd5e1;
       color: var(--text);
       line-height: 1.5;
       margin: 0;
       padding: 40px 20px;
+      position: relative;
+      min-height: 100vh;
+    }
+
+    body::before {
+      content: "";
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background-image: url('https://images.unsplash.com/photo-1581571521426-6414a59db19e?auto=format&fit=crop&q=80&w=1920');
+      background-size: cover;
+      background-position: center;
+      opacity: 0.15;
+      z-index: -1;
     }
 
     .container {
-      max-width: 800px;
-      margin: 0 auto;
+      max-width: 850px;
+      margin: 20px auto;
       background: var(--card);
       padding: 40px;
       border-radius: var(--radius);
-      box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1), 0 2px 4px -1px rgba(0,0,0,0.06);
+      box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1), 0 4px 6px -2px rgba(0,0,0,0.05);
+      backdrop-filter: blur(12px);
     }
 
     h1 {
-      font-size: 24px;
+      font-size: 26px;
       font-weight: 800;
       margin-top: 0;
       margin-bottom: 32px;
@@ -76,7 +88,7 @@
     .nav-btn {
       padding: 8px 16px;
       border: 1px solid var(--border);
-      background: var(--card);
+      background: rgba(255, 255, 255, 0.5);
       border-radius: 8px;
       font-size: 14px;
       font-weight: 600;
@@ -96,15 +108,11 @@
       color: white;
       border-color: var(--primary);
     }
-    .nav-btn[data-id="form"].active {
-      background: var(--form-accent);
-      border-color: var(--form-accent);
-    }
 
-    .panel { display: none; }
+    .panel { display: none; margin-bottom: 40px; }
     .panel.active { display: block; }
 
-    .header h2 { font-size: 22px; margin: 0 0 8px; }
+    .header h2 { font-size: 22px; margin: 0 0 8px; color: #0f172a; }
     .header p { color: var(--text-light); margin: 0 0 24px; font-size: 15px; }
 
     .section-label {
@@ -121,7 +129,7 @@
       align-items: center;
       gap: 16px;
       padding: 12px 0;
-      border-bottom: 1px solid #f1f5f9;
+      border-bottom: 1px solid rgba(0,0,0,0.05);
     }
     .score-row:last-child { border-bottom: none; }
 
@@ -138,7 +146,7 @@
     .badge-moderate { background: var(--moderate-bg); color: var(--moderate-text); }
     .badge-danger { background: var(--danger-bg); color: var(--danger-text); }
 
-    .list-item { padding: 12px 0; border-bottom: 1px solid #f1f5f9; }
+    .list-item { padding: 12px 0; border-bottom: 1px solid rgba(0,0,0,0.05); }
     .list-item:last-child { border-bottom: none; }
     .list-label { font-weight: 700; font-size: 14px; display: block; margin-bottom: 2px; }
     .list-desc { font-size: 14px; color: var(--text-light); }
@@ -146,7 +154,7 @@
     .chip {
       display: inline-block;
       padding: 4px 12px;
-      background: var(--bg);
+      background: rgba(0,0,0,0.03);
       border: 1px solid var(--border);
       border-radius: 20px;
       font-size: 13px;
@@ -154,7 +162,7 @@
     }
 
     .tip {
-      margin-top: 32px;
+      margin: 32px 0;
       padding: 20px;
       background: var(--info-bg);
       border-radius: var(--radius);
@@ -167,101 +175,109 @@
     .range-seg { height: 8px; border-radius: 4px; flex: 1; }
     .range-labels { display: flex; justify-content: space-between; font-size: 11px; color: var(--text-light); font-weight: 600; }
 
-    /* Form Styles */
-    .form-panel {
-      background-color: var(--form-bg);
-      margin: -40px;
-      padding: 12px 12px 40px;
+    /* Unified Form Styles */
+    .assessment-form {
+      background-color: rgba(241, 245, 249, 0.8);
+      margin: 40px -40px -40px;
+      padding: 40px;
+      border-top: 2px solid var(--border);
       border-radius: 0 0 var(--radius) var(--radius);
+    }
+
+    .form-title {
+      font-size: 18px;
+      font-weight: 700;
+      margin: 0 0 24px;
+      color: #0f172a;
       display: flex;
-      flex-direction: column;
       align-items: center;
+      gap: 8px;
     }
-    .form-container {
-      width: 100%;
-      max-width: 640px;
+
+    .form-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 24px;
     }
-    .form-card {
-      background: white;
-      border-radius: 8px;
-      padding: 24px;
-      margin-bottom: 12px;
-      border: 1px solid var(--border);
-      box-shadow: 0 1px 2px rgba(0,0,0,0.05);
-    }
-    .form-card.header-card {
-      border-top: 10px solid var(--form-accent);
-    }
-    .form-question {
-      font-size: 16px;
-      font-weight: 500;
-      margin-bottom: 12px;
+
+    .input-group { margin-bottom: 0; }
+
+    .input-label {
+      font-size: 14px;
+      font-weight: 600;
+      margin-bottom: 8px;
+      display: block;
       color: var(--text);
     }
-    .form-question span { color: #d93025; }
-    .form-desc {
-      font-size: 14px;
-      color: var(--text-light);
-      margin-bottom: 16px;
-      line-height: 1.4;
-    }
-    .form-input {
+
+    .input-field {
       width: 100%;
-      border: none;
-      border-bottom: 1px solid var(--border);
-      padding: 8px 0;
+      padding: 10px 12px;
+      border: 1px solid var(--border);
+      border-radius: 8px;
       font-size: 14px;
+      background: white;
       outline: none;
-      transition: border-color 0.2s;
+      transition: all 0.2s;
     }
-    .form-input:focus {
-      border-bottom: 2px solid var(--form-accent);
+
+    .input-field:focus {
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
     }
-    .form-radio-group {
+
+    .radio-group {
       display: flex;
-      flex-direction: column;
       gap: 20px;
-      margin-top: 8px;
+      margin-top: 10px;
     }
-    .form-radio-option {
+
+    .radio-option {
       display: flex;
       align-items: center;
-      gap: 10px;
+      gap: 8px;
       cursor: pointer;
       font-size: 14px;
     }
-    .form-radio-option input {
-      width: 20px;
-      height: 20px;
-      cursor: pointer;
-      accent-color: var(--form-accent);
+
+    .radio-option input {
+      width: 18px;
+      height: 18px;
+      accent-color: var(--primary);
     }
+
     .form-actions {
+      grid-column: span 2;
       display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-top: 24px;
+      justify-content: flex-end;
+      gap: 12px;
+      margin-top: 16px;
     }
-    .btn-submit {
-      background: var(--form-accent);
-      color: white;
-      border: none;
+
+    .btn {
       padding: 10px 24px;
-      border-radius: 4px;
+      border-radius: 8px;
+      font-size: 14px;
       font-weight: 600;
       cursor: pointer;
-      transition: background 0.2s;
-      font-size: 14px;
+      transition: all 0.2s;
     }
-    .btn-submit:hover { background: var(--form-accent-hover); }
-    .btn-clear {
-      color: var(--form-accent);
-      background: none;
+    .btn-primary {
+      background: var(--primary);
+      color: white;
       border: none;
-      font-size: 14px;
-      font-weight: 500;
-      cursor: pointer;
-      padding: 8px;
+    }
+    .btn-primary:hover { background: var(--primary-dark); transform: translateY(-1px); }
+    .btn-outline {
+      background: white;
+      color: var(--text);
+      border: 1px solid var(--border);
+    }
+    .btn-outline:hover { background: var(--bg); border-color: var(--text-light); }
+
+    @media (max-width: 640px) {
+      .form-grid { grid-template-columns: 1fr; }
+      .form-actions { grid-column: span 1; }
     }
   </style>
 </head>
@@ -276,7 +292,6 @@
     <button class="nav-btn" data-id="mc">Memory Complaints</button>
     <button class="nav-btn" data-id="bp">Behavioral Problems</button>
     <button class="nav-btn" data-id="adl">ADL</button>
-    <button class="nav-btn" data-id="form">Clinical Form</button>
   </div>
 
   <div id="mmse" class="panel active">
@@ -430,63 +445,47 @@
     </div>
   </div>
 
-  <div id="form" class="panel">
-    <div class="form-panel">
-      <div class="form-container">
-      <!-- MMSE -->
-      <div class="form-card header-card">
-        <div class="form-question">MMSE <span>*</span></div>
-        <div class="form-desc">MMSE: Mini-Mental State Examination score, ranging from 0 to 30. Lower scores indicate cognitive impairment.</div>
-        <input type="number" class="form-input" placeholder="Your answer" min="0" max="30">
+  <!-- Unified Assessment Form -->
+  <div class="assessment-form">
+    <h3 class="form-title">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="color: var(--primary)"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
+      Clinical Assessment Form
+    </h3>
+    <div class="form-grid">
+      <div class="input-group">
+        <label class="input-label" for="form-mmse">MMSE Score (0–30)</label>
+        <input type="number" id="form-mmse" class="input-field" min="0" max="30" placeholder="0-30">
       </div>
 
-      <!-- Functional Assessment -->
-      <div class="form-card">
-        <div class="form-question">FunctionalAssessment <span>*</span></div>
-        <div class="form-desc">FunctionalAssessment: Functional assessment score, ranging from 0 to 10. Lower scores indicate greater impairment.</div>
-        <input type="number" class="form-input" placeholder="Your answer" min="0" max="10">
+      <div class="input-group">
+        <label class="input-label" for="form-fast">FAST Stage (1–7)</label>
+        <input type="number" id="form-fast" class="input-field" min="1" max="7" placeholder="1-7">
       </div>
 
-      <!-- Memory Complaints -->
-      <div class="form-card">
-        <div class="form-question">MemoryComplaints <span>*</span></div>
-        <div class="form-desc">MemoryComplaints: Presence of memory complaints, where 0 indicates No and 1 indicates Yes.</div>
-        <div class="form-radio-group">
-          <label class="form-radio-option">
-            <input type="radio" name="mc" value="0"> 0
-          </label>
-          <label class="form-radio-option">
-            <input type="radio" name="mc" value="1"> 1
-          </label>
+      <div class="input-group">
+        <label class="input-label">Memory Complaints</label>
+        <div class="radio-group">
+          <label class="radio-option"><input type="radio" name="form-mc" value="0"> No</label>
+          <label class="radio-option"><input type="radio" name="form-mc" value="1"> Yes</label>
         </div>
       </div>
 
-      <!-- Behavioral Problems -->
-      <div class="form-card">
-        <div class="form-question">BehavioralProblems <span>*</span></div>
-        <div class="form-desc">BehavioralProblems: Presence of behavioral problems, where 0 indicates No and 1 indicates Yes.</div>
-        <div class="form-radio-group">
-          <label class="form-radio-option">
-            <input type="radio" name="bp" value="0"> 0
-          </label>
-          <label class="form-radio-option">
-            <input type="radio" name="bp" value="1"> 1
-          </label>
+      <div class="input-group">
+        <label class="input-label">Behavioral Problems</label>
+        <div class="radio-group">
+          <label class="radio-option"><input type="radio" name="form-bp" value="0"> No</label>
+          <label class="radio-option"><input type="radio" name="form-bp" value="1"> Yes</label>
         </div>
       </div>
 
-      <!-- ADL -->
-      <div class="form-card">
-        <div class="form-question">ADL <span>*</span></div>
-        <div class="form-desc">ADL: Activities of Daily Living score, ranging from 0 to 10. Lower scores indicate greater impairment.</div>
-        <input type="number" class="form-input" placeholder="Your answer" min="0" max="10">
+      <div class="input-group" style="grid-column: 1 / -1;">
+        <label class="input-label" for="form-adl">ADL / IADL Composite Score (0–10)</label>
+        <input type="number" id="form-adl" class="input-field" min="0" max="10" placeholder="0-10">
       </div>
 
       <div class="form-actions">
-        <button class="btn-submit">Submit</button>
-        <button class="btn-clear">Clear form</button>
-      </div>
-      <p style="font-size:12px; color:var(--text-light); margin-top:24px">Never submit passwords through Google Forms.</p>
+        <button class="btn btn-outline" onclick="resetForm()">Clear All</button>
+        <button class="btn btn-primary" onclick="submitAssessment()">Save Assessment</button>
       </div>
     </div>
   </div>
@@ -507,6 +506,24 @@
       document.getElementById(id).classList.add('active');
     });
   });
+
+  function resetForm() {
+    document.getElementById('form-mmse').value = '';
+    document.getElementById('form-fast').value = '';
+    document.getElementById('form-adl').value = '';
+    document.querySelectorAll('input[type="radio"]').forEach(r => r.checked = false);
+  }
+
+  function submitAssessment() {
+    const data = {
+      mmse: document.getElementById('form-mmse').value,
+      fast: document.getElementById('form-fast').value,
+      mc: document.querySelector('input[name="form-mc"]:checked')?.value || 'Not set',
+      bp: document.querySelector('input[name="form-bp"]:checked')?.value || 'Not set',
+      adl: document.getElementById('form-adl').value
+    };
+    alert('Assessment Data Saved:\n' + JSON.stringify(data, null, 2));
+  }
 </script>
 </body>
 </html>
