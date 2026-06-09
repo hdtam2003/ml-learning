@@ -2,101 +2,54 @@ import pandas as pd
 import plotly.express as px
 import plotly.graph_objects as go
 from plotly.subplots import make_subplots
-import os
 
-# Load dataset
-df = pd.read_excel('1. Dataset .xlsx')
+def generate_report():
+    # Load dataset
+    df = pd.read_excel('1. Dataset .xlsx')
 
-# 1. Diagnosis Distribution
-fig_diag = px.pie(df, names='Diagnosis', title='Alzheimer\'s Diagnosis Distribution (0: No, 1: Yes)',
-             color_discrete_sequence=px.colors.qualitative.Pastel)
-html_diag = fig_diag.to_html(full_html=False, include_plotlyjs='cdn')
+    # Preprocessing for visualization
+    df = df.dropna(subset=['Gender', 'Diagnosis'])
+    df['Diagnosis_Label'] = df['Diagnosis'].map({0: 'Healthy', 1: 'Alzheimer\'s'})
+    df['Gender_Label'] = df['Gender'].map({0: 'Male', 1: 'Female'})
 
-# 2. Age vs Diagnosis
-fig_age = px.histogram(df, x='Age', color='Diagnosis', barmode='overlay',
-                   title='Age Distribution by Diagnosis',
-                   labels={'Age': 'Age (Years)', 'count': 'Number of Patients'})
-html_age = fig_age.to_html(full_html=False, include_plotlyjs='cdn')
+    # 1. Diagnosis Distribution by Gender
+    fig1 = px.sunburst(df, path=['Gender_Label', 'Diagnosis_Label'],
+                      title='Population Breakdown by Gender and Diagnosis',
+                      color='Diagnosis_Label',
+                      color_discrete_map={'Healthy': '#10b981', 'Alzheimer\'s': '#ef4444'})
 
-# 3. MMSE vs ADL (Core Clinical Metrics)
-fig_scatter = px.scatter(df, x='MMSE', y='ADL', color='Diagnosis',
-                    title='MMSE vs ADL Scores',
-                    hover_data=['Age', 'BMI'],
-                    opacity=0.6)
-html_scatter = fig_scatter.to_html(full_html=False, include_plotlyjs='cdn')
+    # 2. Cognitive Metrics Correlation
+    numeric_cols = ['Age', 'BMI', 'MMSE', 'FunctionalAssessment', 'ADL']
+    corr = df[numeric_cols].corr()
+    fig2 = px.imshow(corr, text_auto=True, aspect="auto",
+                    title="Correlation Heatmap: Clinical Metrics",
+                    color_continuous_scale='RdBu_r')
 
-# 4. Correlation Heatmap (Selected Features)
-cols = ['Age', 'BMI', 'AlcoholConsumption', 'PhysicalActivity', 'DietQuality', 'SleepQuality', 'MMSE', 'ADL', 'Diagnosis']
-corr = df[cols].corr()
-fig_corr = px.imshow(corr, text_auto=True, title='Correlation Heatmap of Key Features')
-html_corr = fig_corr.to_html(full_html=False, include_plotlyjs='cdn')
+    # 3. Age & BMI distribution by Diagnosis
+    fig3 = px.violin(df, y="Age", x="Diagnosis_Label", color="Diagnosis_Label",
+                    box=True, points="all", title="Age Distribution across Diagnosis Groups",
+                    color_discrete_map={'Healthy': '#10b981', 'Alzheimer\'s': '#ef4444'})
 
-# 5. Boxplots for Clinical Scores
-fig_box = make_subplots(rows=1, cols=2, subplot_titles=("MMSE Distribution", "ADL Distribution"))
-fig_box.add_trace(go.Box(y=df['MMSE'], name='MMSE', boxpoints='all'), row=1, col=1)
-fig_box.add_trace(go.Box(y=df['ADL'], name='ADL', boxpoints='all'), row=1, col=2)
-fig_box.update_layout(title_text="Clinical Score Distributions")
-html_box = fig_box.to_html(full_html=False, include_plotlyjs='cdn')
+    # 4. ADL vs MMSE Scatter
+    fig4 = px.scatter(df, x="MMSE", y="ADL", color="Diagnosis_Label",
+                     marginal_x="histogram", marginal_y="rug",
+                     title="ADL vs MMSE Score Relationship",
+                     labels={'MMSE': 'MMSE Score (Cognitive)', 'ADL': 'ADL Score (Functional)'},
+                     color_discrete_map={'Healthy': '#10b981', 'Alzheimer\'s': '#ef4444'})
 
-# 6. Ethnicity and Gender Analysis
-fig_eth = px.bar(df.groupby(['Ethnicity', 'Diagnosis']).size().reset_index(name='count'),
-                 x='Ethnicity', y='count', color='Diagnosis', barmode='group',
-                 title='Diagnosis by Ethnicity')
-html_eth = fig_eth.to_html(full_html=False, include_plotlyjs='cdn')
+    # Combine into a single HTML report with a clean layout
+    with open('eda_report.html', 'w') as f:
+        f.write("<html><head><title>Alzheimer's Clinical EDA</title>")
+        f.write("<style>body{font-family:sans-serif; background:#f8fafc; padding:20px;} .chart-container{background:white; border-radius:8px; padding:20px; margin-bottom:30px; box-shadow:0 1px 3px rgba(0,0,0,0.1);}</style>")
+        f.write("</head><body>")
+        f.write("<h1>Advanced Clinical Data Exploration</h1>")
 
-# Combine everything into a single HTML report
-html_template = f"""
-<!DOCTYPE html>
-<html>
-<head>
-    <title>Alzheimer's Clinical Data EDA</title>
-    <style>
-        body {{ font-family: 'Inter', sans-serif; background-color: #f8fafc; padding: 20px; color: #1e293b; }}
-        .container {{ max-width: 1200px; margin: 0 auto; background: white; padding: 40px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }}
-        h1 {{ text-align: center; color: #0f172a; margin-bottom: 40px; }}
-        .viz-section {{ margin-bottom: 60px; padding: 20px; border: 1px solid #e2e8f0; border-radius: 8px; }}
-        .description {{ margin-top: 15px; color: #64748b; font-size: 14px; line-height: 1.6; }}
-    </style>
-</head>
-<body>
-    <div class="container">
-        <h1>Alzheimer's Disease Clinical Dataset Analysis</h1>
+        for i, fig in enumerate([fig1, fig2, fig3, fig4]):
+            f.write(f"<div class='chart-container'>{fig.to_html(full_html=False, include_plotlyjs='cdn' if i==0 else False)}</div>")
 
-        <div class="viz-section">
-            {html_diag}
-            <p class="description">This chart shows the balance of the dataset between diagnosed patients and control groups.</p>
-        </div>
+        f.write("</body></html>")
 
-        <div class="viz-section">
-            {html_age}
-            <p class="description">Age distribution helps identify the primary demographic affected by the disease in this study.</p>
-        </div>
+    print("EDA Report generated: eda_report.html")
 
-        <div class="viz-section">
-            {html_scatter}
-            <p class="description">The relationship between MMSE (cognitive) and ADL (functional) scores is a primary indicator of disease progression.</p>
-        </div>
-
-        <div class="viz-section">
-            {html_corr}
-            <p class="description">Correlation heatmap showing which lifestyle and clinical factors correlate most strongly with a diagnosis.</p>
-        </div>
-
-        <div class="viz-section">
-            {html_box}
-            <p class="description">Boxplots showing the range and outliers for the most critical clinical metrics.</p>
-        </div>
-
-        <div class="viz-section">
-            {html_eth}
-            <p class="description">Demographic breakdown of the dataset across different ethnicities.</p>
-        </div>
-    </div>
-</body>
-</html>
-"""
-
-with open('eda_report.html', 'w') as f:
-    f.write(html_template)
-
-print("EDA report generated: eda_report.html")
+if __name__ == "__main__":
+    generate_report()
