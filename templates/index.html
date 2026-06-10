@@ -6,6 +6,7 @@
     <title>Alzheimer's Clinical Intelligence Portal</title>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/inter-ui@3.19.3/inter.min.css">
     <script src="https://cdn.plot.ly/plotly-2.27.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
     <style>
         :root {
@@ -308,8 +309,16 @@
             <div class="metric-grid">
                 <div class="metric-card"><label>Cohort Size</label><span>{{ total_count }}</span></div>
                 <div class="metric-card"><label>Average Age</label><span>{{ averages.Age }}</span></div>
-                <div class="metric-card"><label>Avg MMSE</label><span>{{ averages.MMSE }}</span></div>
-                <div class="metric-card"><label>Avg ADL</label><span>{{ averages.ADL }}</span></div>
+                <div class="metric-card">
+                    <label>Avg MMSE (Cognitive)</label>
+                    <div style="height: 100px; margin: 10px 0;"><canvas id="mmseGaugePop"></canvas></div>
+                    <span style="font-size: 1.25rem; font-weight: 800; color: var(--primary);">{{ averages.MMSE }} / 30</span>
+                </div>
+                <div class="metric-card">
+                    <label>Avg ADL (Functional)</label>
+                    <div style="height: 100px; margin: 10px 0;"><canvas id="adlGaugePop"></canvas></div>
+                    <span style="font-size: 1.25rem; font-weight: 800; color: var(--primary);">{{ averages.ADL }} / 10</span>
+                </div>
             </div>
 
             <div class="viz-grid">
@@ -350,10 +359,10 @@
 
             <div class="viz-grid">
                 <div class="card">
-                    <div class="chart-header"><h3>Lifestyle Risk Prevalence</h3></div>
+                    <div class="chart-header"><h3>Lifestyle Factors Comparison</h3></div>
                     <div id="lifestyleChart" class="plotly-chart"></div>
                     <div class="clinical-note">
-                        Modifiable risk factors like smoking, alcohol consumption, and physical inactivity contribute significantly to cognitive health.
+                        <strong>Clinical Insight:</strong> Modifiable risk factors are key targets for intervention. This chart compares smoking prevalence, alcohol consumption, and physical activity between healthy and diagnosed cohorts. Note that higher physical activity is typically a protective factor, while smoking and excessive alcohol are risk factors.
                     </div>
                 </div>
                 <div class="card">
@@ -380,7 +389,7 @@
                 <div class="chart-header"><h3>Metabolic Health: BMI Distribution</h3></div>
                 <div id="bmiChart" class="plotly-chart"></div>
                 <div class="clinical-note">
-                    <strong>Clinical Insight:</strong> Abnormalities in BMI and metabolic health are increasingly linked to neurodegenerative processes. This distribution helps identify if certain metabolic profiles are over-represented in the diagnosed cohort.
+                    <strong>Clinical Insight:</strong> BMI serves as a proxy for metabolic health. Both mid-life obesity and late-life underweight status have been linked to increased Alzheimer's risk. Analyzing the distribution across groups helps identify metabolic trends associated with cognitive decline.
                 </div>
             </div>
         </div>
@@ -451,6 +460,26 @@
 
         const config = { responsive: true, displayModeBar: true, displaylogo: false };
 
+        function createPopGauge(id, val, max) {
+            new Chart(document.getElementById(id), {
+                type: 'doughnut',
+                data: {
+                    datasets: [{
+                        data: [val, max - val],
+                        backgroundColor: [val/max > 0.7 ? '#10b981' : (val/max > 0.4 ? '#f59e0b' : '#ef4444'), '#e2e8f0'],
+                        borderWidth: 0,
+                        circumference: 180,
+                        rotation: 270,
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { display: false }, tooltip: { enabled: false } }
+                }
+            });
+        }
+
         function initCharts() {
             Plotly.newPlot('pieChart', chartData.pie.data, chartData.pie.layout, config);
             Plotly.newPlot('sunburstChart', chartData.sunburst.data, chartData.sunburst.layout, config);
@@ -460,6 +489,9 @@
             Plotly.newPlot('lifestyleChart', chartData.lifestyle.data, chartData.lifestyle.layout, config);
             Plotly.newPlot('eduChart', chartData.edu.data, chartData.edu.layout, config);
             Plotly.newPlot('heatmapChart', chartData.heatmap.data, chartData.heatmap.layout, config);
+
+            createPopGauge('mmseGaugePop', {{ averages.MMSE }}, 30);
+            createPopGauge('adlGaugePop', {{ averages.ADL }}, 10);
 
             // Trigger resize to ensure charts fit their containers
             setTimeout(() => window.dispatchEvent(new Event('resize')), 200);

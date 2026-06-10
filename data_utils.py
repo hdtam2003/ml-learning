@@ -84,13 +84,19 @@ def get_analysis_data(dataset_path):
                              yaxis_title="ADL Score",
                              font_family="Inter", margin=dict(t=50, b=20, l=20, r=20))
 
-    # 5. Lifestyle Factors Bar
+    # 5. Lifestyle Factors Bar (Normalized for comparison)
     lifestyle_cols = ['Smoking', 'AlcoholConsumption', 'PhysicalActivity']
     lifestyle_df = df_clean.groupby('Diagnosis_Label')[lifestyle_cols].mean().reset_index()
-    lifestyle_melted = lifestyle_df.melt(id_vars='Diagnosis_Label', var_name='Factor', value_name='Prevalence')
-    fig_lifestyle = px.bar(lifestyle_melted, x='Factor', y='Prevalence', color='Diagnosis_Label', barmode='group',
+
+    # Normalize: Smoking is already 0-1 (prevalence), Alcohol 0-20 -> /20, PhysicalActivity 0-10 -> /10
+    lifestyle_df['AlcoholConsumption'] = lifestyle_df['AlcoholConsumption'] / 20
+    lifestyle_df['PhysicalActivity'] = lifestyle_df['PhysicalActivity'] / 10
+
+    lifestyle_melted = lifestyle_df.melt(id_vars='Diagnosis_Label', var_name='Factor', value_name='Score')
+    fig_lifestyle = px.bar(lifestyle_melted, x='Factor', y='Score', color='Diagnosis_Label', barmode='group',
+                          labels={'Score': 'Impact Score (Normalized 0-1)'},
                           color_discrete_map={'Healthy': '#10b981', 'Alzheimer\'s': '#ef4444', 'Unknown': '#94a3b8'})
-    fig_lifestyle.update_layout(title="Lifestyle Risk Factors", font_family="Inter", margin=dict(t=50, b=20, l=20, r=20))
+    fig_lifestyle.update_layout(title="Lifestyle Factors Comparison (Normalized)", font_family="Inter", margin=dict(t=50, b=20, l=20, r=20))
 
     # 6. Education Histogram
     fig_edu = px.histogram(df_clean, x="Education_Label", color="Diagnosis_Label", barmode='group',
