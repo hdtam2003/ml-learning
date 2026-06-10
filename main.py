@@ -1,5 +1,5 @@
 from fastapi import FastAPI, Request, Form
-from fastapi.responses import HTMLResponse
+from fastapi.responses import HTMLResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 from pydantic import BaseModel, Field
@@ -8,6 +8,7 @@ import numpy as np
 from datetime import datetime
 import os
 import threading
+import data_utils
 
 app = FastAPI()
 
@@ -39,10 +40,17 @@ def save_db(df):
         df.to_excel(DATASET_PATH, index=False)
 
 @app.get("/", response_class=HTMLResponse)
-async def read_root(request: Request):
-    return templates.TemplateResponse(request=request, name="index.html", context={})
+async def read_root(request: Request, success: bool = False):
+    analysis_data = data_utils.get_analysis_data(DATASET_PATH)
+    success_msg = "Assessment processed successfully." if success else None
+    return templates.TemplateResponse(request=request, name="index.html", context={
+        "averages": analysis_data["averages"],
+        "total_count": analysis_data["total_count"],
+        "charts": analysis_data["charts"],
+        "success_msg": success_msg
+    })
 
-@app.post("/submit", response_class=HTMLResponse)
+@app.post("/submit")
 async def submit_assessment(
     request: Request,
     Age: float = Form(...),
@@ -63,67 +71,33 @@ async def submit_assessment(
             ADL=ADL
         )
     except Exception as e:
-        return HTMLResponse(content=f"Validation Error: {e}", status_code=400)
+        return JSONResponse(content={"success": False, "error": str(e)}, status_code=400)
 
     # Load dataset for comparison
-    df = get_db()
+    try:
+        df = get_db()
 
-    # Calculate population averages for relevant metrics
-    averages = {
-        "MMSE": round(df['MMSE'].mean(), 2),
-        "ADL": round(df['ADL'].mean(), 2),
-        "FunctionalAssessment": round(df['FunctionalAssessment'].mean(), 2),
-        "BMI": round(df['BMI'].mean(), 2),
-        "Age": round(df['Age'].mean(), 2)
-    }
+        # Create new record
+        new_record = {
+            "Age": data.Age,
+            "BMI": data.BMI,
+            "MMSE": data.MMSE,
+            "FunctionalAssessment": data.FunctionalAssessment,
+            "MemoryComplaints": data.MemoryComplaints,
+            "BehavioralProblems": data.BehavioralProblems,
+            "ADL": data.ADL,
+            "Diagnosis": 0, # Default for new entries
+            "PatientID": int(df['PatientID'].max() + 1) if not df.empty else 1,
+            "DoctorInCharge": "System Generated"
+        }
 
-    # Create new record
-    new_record = {
-        "Age": data.Age,
-        "BMI": data.BMI,
-        "MMSE": data.MMSE,
-        "FunctionalAssessment": data.FunctionalAssessment,
-        "MemoryComplaints": data.MemoryComplaints,
-        "BehavioralProblems": data.BehavioralProblems,
-        "ADL": data.ADL,
-        "Diagnosis": 0, # Default for new entries
-        "PatientID": int(df['PatientID'].max() + 1) if not df.empty else 1,
-        "DoctorInCharge": "System Generated"
-    }
-
-    # Append to dataset
-    new_row = pd.DataFrame([new_record])
-    updated_df = pd.concat([df, new_row], ignore_index=True)
-    save_db(updated_df)
-
-    # Statistics for distribution charts
-    mmse_hist, mmse_edges = np.histogram(updated_df['MMSE'].dropna(), bins=20)
-    adl_hist, adl_edges = np.histogram(updated_df['ADL'].dropna(), bins=20)
-
-    stats = {
-        "mmse_bins": [round(b, 1) for b in mmse_edges[:-1]],
-        "mmse_counts": mmse_hist.tolist(),
-        "adl_bins": [round(b, 1) for b in adl_edges[:-1]],
-        "adl_counts": adl_hist.tolist()
-    }
-
-    patient_data = data.model_dump()
-    # Convert MemoryComplaints/BehavioralProblems back to Yes/No for display if needed
-    # but the template currently uses the raw values.
-    # Results template expects string "Yes"/"No" for the cards in some versions but the previous logic sent strings.
-    # Let's check results.html cards.
-
-    patient_display = patient_data.copy()
-    patient_display["MemoryComplaints"] = "Yes" if data.MemoryComplaints == 1 else "No"
-    patient_display["BehavioralProblems"] = "Yes" if data.BehavioralProblems == 1 else "No"
-
-    return templates.TemplateResponse(request=request, name="results.html", context={
-        "patient": patient_display,
-        "averages": averages,
-        "stats": stats,
-        "total_count": len(updated_df),
-        "date": datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-    })
+        # Append to dataset
+        new_row = pd.DataFrame([new_record])
+        updated_df = pd.concat([df, new_row], ignore_index=True)
+        save_db(updated_df)
+        return {"success": True}
+    except Exception as e:
+        return JSONResponse(content={"success": False, "error": str(e)}, status_code=500)
 
 if __name__ == "__main__":
     import uvicorn
