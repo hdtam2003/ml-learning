@@ -8,6 +8,7 @@ import numpy as np
 from datetime import datetime
 import os
 import threading
+import data_utils
 
 app = FastAPI()
 
@@ -40,7 +41,12 @@ def save_db(df):
 
 @app.get("/", response_class=HTMLResponse)
 async def read_root(request: Request):
-    return templates.TemplateResponse(request=request, name="index.html", context={})
+    analysis_data = data_utils.get_analysis_data(DATASET_PATH)
+    return templates.TemplateResponse(request=request, name="index.html", context={
+        "averages": analysis_data["averages"],
+        "total_count": analysis_data["total_count"],
+        "charts": analysis_data["charts"]
+    })
 
 @app.post("/submit", response_class=HTMLResponse)
 async def submit_assessment(
@@ -68,15 +74,6 @@ async def submit_assessment(
     # Load dataset for comparison
     df = get_db()
 
-    # Calculate population averages for relevant metrics
-    averages = {
-        "MMSE": round(df['MMSE'].mean(), 2),
-        "ADL": round(df['ADL'].mean(), 2),
-        "FunctionalAssessment": round(df['FunctionalAssessment'].mean(), 2),
-        "BMI": round(df['BMI'].mean(), 2),
-        "Age": round(df['Age'].mean(), 2)
-    }
-
     # Create new record
     new_record = {
         "Age": data.Age,
@@ -96,33 +93,15 @@ async def submit_assessment(
     updated_df = pd.concat([df, new_row], ignore_index=True)
     save_db(updated_df)
 
-    # Statistics for distribution charts
-    mmse_hist, mmse_edges = np.histogram(updated_df['MMSE'].dropna(), bins=20)
-    adl_hist, adl_edges = np.histogram(updated_df['ADL'].dropna(), bins=20)
+    # Re-fetch analysis data for the updated dashboard
+    analysis_data = data_utils.get_analysis_data(DATASET_PATH)
 
-    stats = {
-        "mmse_bins": [round(b, 1) for b in mmse_edges[:-1]],
-        "mmse_counts": mmse_hist.tolist(),
-        "adl_bins": [round(b, 1) for b in adl_edges[:-1]],
-        "adl_counts": adl_hist.tolist()
-    }
-
-    patient_data = data.model_dump()
-    # Convert MemoryComplaints/BehavioralProblems back to Yes/No for display if needed
-    # but the template currently uses the raw values.
-    # Results template expects string "Yes"/"No" for the cards in some versions but the previous logic sent strings.
-    # Let's check results.html cards.
-
-    patient_display = patient_data.copy()
-    patient_display["MemoryComplaints"] = "Yes" if data.MemoryComplaints == 1 else "No"
-    patient_display["BehavioralProblems"] = "Yes" if data.BehavioralProblems == 1 else "No"
-
-    return templates.TemplateResponse(request=request, name="results.html", context={
-        "patient": patient_display,
-        "averages": averages,
-        "stats": stats,
-        "total_count": len(updated_df),
-        "date": datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    # We return the same index page but with the updated data
+    return templates.TemplateResponse(request=request, name="index.html", context={
+        "averages": analysis_data["averages"],
+        "total_count": analysis_data["total_count"],
+        "charts": analysis_data["charts"],
+        "success_msg": "Assessment processed successfully."
     })
 
 if __name__ == "__main__":
