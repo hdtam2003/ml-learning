@@ -306,6 +306,56 @@
     <div class="container">
         <!-- Overview Section -->
         <div id="section-overview" class="section active">
+            <div class="card" style="border-left: 6px solid var(--primary); background: #f0f7ff;">
+                <h2 style="margin-top: 0; color: var(--primary);">Clinical Population Report</h2>
+                <p>This dashboard provides a comprehensive analysis of the <strong>{{ total_count }}</strong> patients in the current clinical cohort.
+                   The data encompasses a wide range of biomarkers, cognitive scores, and lifestyle factors used to identify patterns associated with Alzheimer's Disease.</p>
+                <div class="clinical-note" style="background: #fff; border: 1px solid var(--border); color: #1e293b;">
+                    <strong>Technical Correction:</strong> We identified and resolved a data serialization issue where binary encoding (bdata) in the frontend charts was misrepresenting data density as raw values, causing axes to scale up to 1500 (the record count). All visualizations now correctly display the actual clinical units:
+                    <span style="color: var(--primary); font-weight: 600;">Years (60-90)</span>, <span style="color: var(--primary); font-weight: 600;">BMI (15-40)</span>, and <span style="color: var(--primary); font-weight: 600;">MMSE (0-30)</span>.
+                </div>
+            </div>
+
+            <div class="card" style="background: white;">
+                <div class="chart-header"><h3>Cohort Statistical Summary</h3></div>
+                <table style="width: 100%; border-collapse: collapse; margin-top: 10px;">
+                    <thead>
+                        <tr style="border-bottom: 2px solid var(--border); text-align: left; color: var(--secondary); font-size: 0.85rem;">
+                            <th style="padding: 10px;">Metric</th>
+                            <th style="padding: 10px;">Population Average</th>
+                            <th style="padding: 10px;">Clinical Range</th>
+                            <th style="padding: 10px;">Calculation Method</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr style="border-bottom: 1px solid var(--border);">
+                            <td style="padding: 12px; font-weight: 600;">Age</td>
+                            <td style="padding: 12px; color: var(--primary); font-weight: 700;">{{ averages.Age }} yrs</td>
+                            <td style="padding: 12px;">60 - 90</td>
+                            <td style="padding: 12px; font-size: 0.85rem; color: var(--secondary);">Arithmetic mean of all validated records</td>
+                        </tr>
+                        <tr style="border-bottom: 1px solid var(--border);">
+                            <td style="padding: 12px; font-weight: 600;">MMSE Score</td>
+                            <td style="padding: 12px; color: var(--primary); font-weight: 700;">{{ averages.MMSE }} / 30</td>
+                            <td style="padding: 12px;">0 - 30</td>
+                            <td style="padding: 12px; font-size: 0.85rem; color: var(--secondary);">Mean Mini-Mental State Examination score</td>
+                        </tr>
+                        <tr style="border-bottom: 1px solid var(--border);">
+                            <td style="padding: 12px; font-weight: 600;">ADL Score</td>
+                            <td style="padding: 12px; color: var(--primary); font-weight: 700;">{{ averages.ADL }} / 10</td>
+                            <td style="padding: 12px;">0 - 10</td>
+                            <td style="padding: 12px; font-size: 0.85rem; color: var(--secondary);">Mean Activities of Daily Living score</td>
+                        </tr>
+                        <tr style="border-bottom: 1px solid var(--border);">
+                            <td style="padding: 12px; font-weight: 600;">BMI</td>
+                            <td style="padding: 12px; color: var(--primary); font-weight: 700;">{{ averages.BMI }} kg/m²</td>
+                            <td style="padding: 12px;">15 - 40</td>
+                            <td style="padding: 12px; font-size: 0.85rem; color: var(--secondary);">Mean Body Mass Index</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
             <div class="metric-grid">
                 <div class="metric-card"><label>Cohort Size</label><span>{{ total_count }}</span></div>
                 <div class="metric-card"><label>Average Age</label><span>{{ averages.Age }}</span></div>
@@ -525,9 +575,26 @@
         }
 
         // Form handling
-        document.getElementById('assessmentForm').addEventListener('submit', (e) => {
+        document.getElementById('assessmentForm').addEventListener('submit', async (e) => {
             e.preventDefault();
-            alert('Assessment data captured successfully. Analysis comparison logic will be integrated in the next update.');
+            const formData = new FormData(e.target);
+
+            try {
+                const response = await fetch('/submit', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                if (response.ok) {
+                    // Redirect with success parameter to show toast and update data
+                    window.location.href = '/?success=true';
+                } else {
+                    alert('Error submitting assessment.');
+                }
+            } catch (err) {
+                console.error(err);
+                alert('Connection error.');
+            }
         });
     </script>
 </body>

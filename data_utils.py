@@ -17,7 +17,26 @@ class NpEncoder(json.JSONEncoder):
         return super(NpEncoder, self).default(obj)
 
 def to_json_clean(fig):
-    return json.dumps(fig.to_dict(), cls=NpEncoder)
+    """
+    Robustly convert Plotly figure to JSON string, ensuring all data arrays
+    are converted to standard Python lists to avoid binary encoding (bdata).
+    """
+    fig_dict = fig.to_dict()
+    # Iterate through traces to force list conversion of data arrays
+    for i, trace in enumerate(fig.data):
+        for attr in ['x', 'y', 'z', 'values', 'labels']:
+            try:
+                val = getattr(trace, attr)
+                if val is not None:
+                    # Force conversion to list
+                    if hasattr(val, 'tolist'):
+                        fig_dict['data'][i][attr] = val.tolist()
+                    else:
+                        fig_dict['data'][i][attr] = list(val)
+            except (AttributeError, TypeError):
+                continue
+
+    return json.dumps(fig_dict, cls=NpEncoder)
 
 def get_analysis_data(dataset_path):
     df = pd.read_excel(dataset_path)
@@ -60,13 +79,17 @@ def get_analysis_data(dataset_path):
     fig_violin = px.violin(df_clean, y="Age", x="Diagnosis_Label", color="Diagnosis_Label",
                           box=True, points=None,
                           color_discrete_map={'Healthy': '#10b981', 'Alzheimer\'s': '#ef4444', 'Unknown': '#94a3b8'})
-    fig_violin.update_layout(title="Age Distribution", font_family="Inter", margin=dict(t=50, b=20, l=20, r=20))
+    fig_violin.update_layout(title="Age Distribution",
+                             yaxis_title="Age (Years)",
+                             font_family="Inter", margin=dict(t=50, b=20, l=20, r=20))
 
     # 3b. BMI Violin
     fig_bmi = px.violin(df_clean, y="BMI", x="Diagnosis_Label", color="Diagnosis_Label",
                           box=True, points=None,
                           color_discrete_map={'Healthy': '#10b981', 'Alzheimer\'s': '#ef4444', 'Unknown': '#94a3b8'})
-    fig_bmi.update_layout(title="BMI Distribution", font_family="Inter", margin=dict(t=50, b=20, l=20, r=20))
+    fig_bmi.update_layout(title="BMI Distribution",
+                          yaxis_title="BMI (kg/m²)",
+                          font_family="Inter", margin=dict(t=50, b=20, l=20, r=20))
 
     # 4. MMSE vs ADL Scatter
     fig_scatter = go.Figure()
@@ -80,8 +103,8 @@ def get_analysis_data(dataset_path):
             marker=dict(color=color, opacity=0.6)
         ))
     fig_scatter.update_layout(title="Cognitive vs Functional Performance",
-                             xaxis_title="MMSE Score",
-                             yaxis_title="ADL Score",
+                             xaxis_title="MMSE Score (0-30)",
+                             yaxis_title="ADL Score (0-10)",
                              font_family="Inter", margin=dict(t=50, b=20, l=20, r=20))
 
     # 5. Lifestyle Factors Bar (Normalized for comparison)
@@ -102,7 +125,9 @@ def get_analysis_data(dataset_path):
     fig_edu = px.histogram(df_clean, x="Education_Label", color="Diagnosis_Label", barmode='group',
                           category_orders={"Education_Label": ["None", "High School", "Bachelor", "Higher"]},
                           color_discrete_map={'Healthy': '#10b981', 'Alzheimer\'s': '#ef4444', 'Unknown': '#94a3b8'})
-    fig_edu.update_layout(title="Education Level vs Diagnosis", font_family="Inter", margin=dict(t=50, b=20, l=20, r=20))
+    fig_edu.update_layout(title="Education Level vs Diagnosis",
+                          yaxis_title="Count of Patients",
+                          font_family="Inter", margin=dict(t=50, b=20, l=20, r=20))
 
     # 7. Correlation Heatmap
     corr_cols = ['Age', 'BMI', 'MMSE', 'FunctionalAssessment', 'ADL', 'SystolicBP', 'CholesterolTotal']
